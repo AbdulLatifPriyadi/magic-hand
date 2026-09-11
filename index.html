@@ -252,6 +252,57 @@
     const dotsContainer = document.getElementById('dots');
     const rewardOverlay = document.getElementById('reward-overlay');
 
+    // ---- Web Audio API Meow Sound ----
+    let audioCtx = null;
+
+    function getAudioCtx() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function playMeow() {
+      const ctx = getAudioCtx();
+      const now = ctx.currentTime;
+
+      // Pitch variation for variety
+      const basePitch = 600 + Math.random() * 200;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const vibrato = ctx.createOscillator();
+      const vibratoGain = ctx.createGain();
+
+      vibrato.frequency.value = 8;
+      vibratoGain.gain.value = 30;
+      vibrato.connect(vibratoGain);
+      vibratoGain.connect(osc.frequency);
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(basePitch, now);
+      osc.frequency.linearRampToValueAtTime(basePitch * 1.4, now + 0.08);
+      osc.frequency.linearRampToValueAtTime(basePitch * 1.1, now + 0.2);
+      osc.frequency.linearRampToValueAtTime(basePitch * 0.9, now + 0.35);
+      osc.frequency.linearRampToValueAtTime(basePitch * 0.7, now + 0.5);
+
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.4, now + 0.05);
+      gain.gain.linearRampToValueAtTime(0.3, now + 0.2);
+      gain.gain.linearRampToValueAtTime(0.35, now + 0.3);
+      gain.gain.linearRampToValueAtTime(0, now + 0.55);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      vibrato.start(now);
+      osc.start(now);
+      vibrato.stop(now + 0.55);
+      osc.stop(now + 0.55);
+    }
+
     // Build dots
     function buildDots() {
       dotsContainer.innerHTML = '';
@@ -319,6 +370,9 @@
 
       // Blink
       blinkEyes();
+
+      // Meow sound
+      playMeow();
 
       count++;
       updateUI();
